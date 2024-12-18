@@ -1,9 +1,9 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Todo } from './types/Todo';
-import { Filter } from './types/Filters';
-import { Errors } from './types/Errors';
+import { FilterType } from './types/FilterType';
+import { Errors } from './types/ErrorType';
 import { TodoList } from './components/TodoList';
 import { TodoFooter } from './components/TodoFooter';
 import { TodoHeader } from './components/TodoHeader';
@@ -12,31 +12,30 @@ import { getTodos } from './api/todos';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [status, setStatus] = useState(Filter.All);
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const filteredTodos = todos?.filter(todo => {
-    if (status === Filter.Completed) {
-      return todo.completed;
-    } else if (status === Filter.Active) {
-      return todo.completed === false;
-    } else {
-      return true;
-    }
-  });
-
-  const unfulfilledTodos = todos?.filter(todo => !todo.completed);
+  const [status, setStatus] = useState<FilterType>(FilterType.All);
+  const [errorMessage, setErrorMessage] = useState<Errors>(Errors.Default);
 
   useEffect(() => {
     getTodos()
-      .then(data => setTodos(data))
-      .catch(() => {
-        setErrorMessage(Errors.UnableToLoad);
-        const timer = setTimeout(() => setErrorMessage(''), 3000);
-
-        return () => clearTimeout(timer);
-      });
+      .then(setTodos)
+      .catch(() => setErrorMessage(Errors.UnableToLoad));
   }, []);
+
+  const filteredTodos = todos?.filter(todo => {
+    switch (status) {
+      case FilterType.Completed:
+        return todo.completed;
+      case FilterType.Active:
+        return !todo.completed;
+      default:
+        return true;
+    }
+  });
+
+  const unCompletedTodos = useMemo(
+    () => todos.filter(todo => !todo.completed).length,
+    [todos],
+  );
 
   return (
     <div className="todoapp">
@@ -46,19 +45,19 @@ export const App: React.FC = () => {
         <TodoHeader />
 
         <TodoList todos={filteredTodos} />
-        {todos.length !== 0 && (
+        {!!todos.length && (
           <TodoFooter
             status={status}
             setStatus={setStatus}
-            unfulfilledTodos={unfulfilledTodos}
+            unCompletedTodos={unCompletedTodos}
           />
         )}
       </div>
 
-      {/* DON'T use conditional rendering to hide the notification */}
-      {/* Add the 'hidden' class to hide the message smoothly */}
-
-      <ErrorNotification errorMessage={errorMessage} />
+      <ErrorNotification
+        errorMessage={errorMessage}
+        setErrorMessage={setErrorMessage}
+      />
     </div>
   );
 };
