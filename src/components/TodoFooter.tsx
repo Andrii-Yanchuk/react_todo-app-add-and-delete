@@ -20,6 +20,7 @@ export const TodoFooter: React.FC<Props> = props => {
       <nav className="filter" data-cy="Filter">
         {Object.values(FilterType).map(filter => (
           <a
+            key={filter}
             href="#/"
             className={cn('filter__link', {
               selected: status === filter,
