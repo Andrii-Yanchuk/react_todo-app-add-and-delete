@@ -6,10 +6,18 @@ type Props = {
   status: FilterType;
   setStatus: Dispatch<SetStateAction<FilterType>>;
   unCompletedTodos?: number;
+  completedTodos?: number;
+  onClearCompleted: () => Promise<void>;
 };
 
 export const TodoFooter: React.FC<Props> = props => {
-  const { status, setStatus, unCompletedTodos } = props;
+  const {
+    status,
+    setStatus,
+    unCompletedTodos,
+    completedTodos,
+    onClearCompleted,
+  } = props;
 
   return (
     <footer className="todoapp__footer" data-cy="Footer">
@@ -37,6 +45,8 @@ export const TodoFooter: React.FC<Props> = props => {
         type="button"
         className="todoapp__clear-completed"
         data-cy="ClearCompletedButton"
+        onClick={onClearCompleted}
+        disabled={completedTodos === 0}
       >
         Clear completed
       </button>
